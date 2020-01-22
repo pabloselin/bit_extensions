@@ -131,7 +131,7 @@ function bit_get_play( $playid ) {
 }
 
 function bit_get_media( $playid ) {
-	//get media from mediaid
+	//get all media from playid
 	global $wpdb;
 	$media_tablename = BIT_MEDIATABLENAME;
 
@@ -140,3 +140,59 @@ function bit_get_media( $playid ) {
 	return $results;
 }
 
+function bit_get_image( $mediaid, $playslug ) {
+	$uploads_folder = wp_get_upload_dir();
+	$uploadsplay = $uploads_folder['baseurl'] . '/media_obras/' . $playslug . '/' . $mediaid . '.jpg';
+	return $uploadsplay;
+}
+
+function bit_get_video( $mediaid ) {
+
+}
+
+function bit_get_audio( $mediaid ) {
+
+}
+
+function bit_get_documento( $mediaid ) {
+
+}
+
+function bit_get_papeleria( $mediaid ) {
+
+}
+
+function bit_get_boceto3d( $mediaid ) {
+
+}
+
+function bit_get_resource( $mediaid, $playslug ) {
+	//gets a media info by mediaid
+	global $wpdb;
+	$media_tablename = BIT_MEDIATABLENAME;
+
+	$results = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}{$media_tablename} WHERE mediaid LIKE '{$mediaid}'", OBJECT);
+	
+	return $results;
+}
+
+function bit_separate_resource( $resource ) {
+	$type = sanitize_title( $resource->tipo_material );
+
+	switch($type) {
+		case('fotografia'):
+		break;
+		case('video'):
+		break;
+		case('documentos'):
+		break;
+		case('audio'):
+		break;
+		case('papeleria'):
+		break;
+		case('boceto-3d'):
+		break;
+	}
+
+	return $composed_resource;
+}
