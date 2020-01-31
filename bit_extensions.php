@@ -216,12 +216,14 @@ function bit_get_audio( $resource ) {
 	$audiourl = bit_get_mediafolder($resource->play_asoc) . $resource->mediaid . '.mp3';
 	$audioid = 'audio_' . $resource->mediaid;
 	$audioelement = '<div class="audiocontainer">';
-	$audioelement .= '<div id="' . $audioid . '" data-audio="' . $audiourl . '"></div>';
+	$audioelement .= '<div class="wavecontainer" id="' . $audioid . '" data-audio="' . $audiourl . '"></div>';
 	$audioelement .= '<div class="controls"><button class="btn btn-primary" data-action="play-' . $audioid . '"><i class="fas fa-play"></i> | <i class="fas fa-pause"></i></button></div>';
 	$audioelement .= '<script>var wavesurfer_' . $audioid . ' = WaveSurfer.create({
 		container: "#' . $audioid . '",
 		waveColor: "#555",
-		progressColor: "#333"
+		progressColor: "#333",
+		barRadius: 1,
+		barWidth: 3
 	});
 	wavesurfer_' . $audioid . '.load("' . $audiourl . '");
 	// Play button
