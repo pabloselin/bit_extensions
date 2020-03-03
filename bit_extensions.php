@@ -176,6 +176,40 @@ function bit_get_media( $playid ) {
 	return $results;
 }
 
+function bit_get_mediatype( $playid, $type ) {
+	//get all media for a type associated to play
+	global $wpdb;
+	$media_tablename = BIT_MEDIATABLENAME;
+
+	$materialtype = bit_convert_typename($type);
+
+	$results = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}{$media_tablename} WHERE tipo_material = '{$materialtype}'");
+
+	return $results;
+}
+
+function bit_convert_typename( $type ) {
+	switch($type) {
+		case('fotografia'):
+			return 'Fotografía';
+		break;
+		case('video'):
+			return 'Video';
+		case('documentos'):
+			return 'Documentos';
+		break;
+		case('audio'):
+			return 'Audio';
+		break;
+		case('papeleria'):
+			return 'Papelería';
+		break;
+		case('boceto-3d'):
+			return 'Boceto 3D';
+		break;
+	}
+}
+
 function bit_get_mediafolder( $playid ) {
 	$uploads_folder = wp_get_upload_dir();
 	$playslug = get_term_by( 'id', $playid, 'obra' );
@@ -292,3 +326,18 @@ function bit_separate_resource( $resource ) {
 
 	return $composed_resource;
 }
+
+// Funciones para revisar todos los materiales por tipo
+
+// Listado de fotografias
+
+// Listado de videos
+
+// Listado de audios
+
+// Listado de documentos
+
+// Listado de bocetos 3d
+
+// Funciones para revisar todos los materiales por categoría
+
