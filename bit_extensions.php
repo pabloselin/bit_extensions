@@ -156,6 +156,46 @@ function bit_render_mediazone( ) {
 	die();
 }
 
+
+function bit_get_gallery( $playid ) {
+	$output = '';
+	$fotos = bit_get_mediatype($playid, 'fotografia');
+
+	if($fotos):
+		$output .= '<div class="bit-gallery">';
+		foreach($fotos as $foto):
+			$output .= '<div class="image-wrap">';
+			$output .= bit_get_image($foto);
+			$output .= '</div>';
+		endforeach;
+		$output .= '</div>';
+	endif;
+
+	return $output;
+}
+
+add_action( 'wp_ajax_nopriv_bit_get_media', 'bit_get_media');
+add_action( 'wp_ajax_bit_get_media', 'bit_get_media');
+
+
+function bit_get_media( ) {
+	$playid = $_POST['playid'];
+	$type = $_POST['getType'];
+
+	$output = '';
+
+	switch($type) {
+		case('gallery'):
+			$output .= bit_get_gallery( $playid );
+		break;
+		default:
+			$output .= $type . ': Content not ready yet';
+	}
+
+	echo $output;
+	die();
+}
+
 function bit_get_play( $playid ) {
 	//get intro for play
 	global $wpdb;
@@ -166,7 +206,7 @@ function bit_get_play( $playid ) {
 	return $results;
 }
 
-function bit_get_media( $playid ) {
+function bit_get_all_media_from_db( $playid ) {
 	//get all media from playid
 	global $wpdb;
 	$media_tablename = BIT_MEDIATABLENAME;
@@ -233,11 +273,13 @@ function bit_get_single_media_item( $mediaid ) {
 }
 
 function bit_get_image( $resource ) {
-	$image = bit_get_media_from_wp( $resource );
+	$image = bit_get_media_from_wp( $resource, '.jpg' );
 	$imgurl = wp_get_attachment_image_url( $image[0]->ID, 'medium' );
 	$imgelement = '<img class="text-related-image" src="' . $imgurl . '" alt="' . $image[0]->post_title . '" title="' . $image[0]->post_title . '">';
 
+	//return 'postid:' . $image;
 	return $imgelement;
+	
 }
 
 function bit_get_video( $resource ) {
@@ -254,8 +296,9 @@ function bit_get_video_player( $videoid ) {
 }
 
 function bit_get_audio( $resource ) {
-	$audiourl = bit_get_mediafolder($resource->play_asoc) . $resource->mediaid . '.mp3';
-	$audioid = 'audio_' . $resource->mediaid;
+	$audio = bit_get_media_from_wp( $resource, '.mp3');
+	$audiourl = wp_get_attachment_url( $audio[0]->ID );
+	$audioid = 'audio_' . $audio[0]->ID;
 	$audioelement = '<div class="audiocontainer">';
 	$audioelement .= '<div class="wavecontainer" id="' . $audioid . '" data-audio="' . $audiourl . '"></div>';
 	$audioelement .= '<div class="controls"><button class="btn btn-primary" data-action="play-' . $audioid . '"><i class="fas fa-play"></i> | <i class="fas fa-pause"></i></button></div>';
@@ -278,7 +321,9 @@ function bit_get_audio( $resource ) {
 	}
 
 	function bit_get_documento( $resource ) {
-		$docurl = bit_get_mediafolder($resource->play_asoc) . $resource->mediaid . '.pdf';
+		$documento = bit_get_media_from_wp( $resource, '.pdf' );
+		$docurl = wp_get_attachment_url( $documento[0]->ID );
+		
 		$docelement = '<a href="' . $docurl . '" target="_blank" class="btn btn-primary document-download-button"><i class="fas fa-download"></i> Descargar documento (pdf)</a>';
 
 		return $docelement;
@@ -339,13 +384,11 @@ function bit_get_audio( $resource ) {
 		$args = array(
 			'post_type' => 'attachment',
 			'numberposts' => 1,
-			'meta_query'  => array(
-				array(
-					'key' => '_bit_mediaid',
-					'value' => $resource->mediaid
-				)
-			)
+			'meta_key'  => '_bit_mediaid',
+			'meta_value' => $resource->mediaid
 		);
+
+
 		$media = get_posts($args);
 		
 		if(empty($media)) {
@@ -354,12 +397,14 @@ function bit_get_audio( $resource ) {
 				$args = array(
 					'posts__in' => $id
 				);
-				$image = get_posts($args);
+				$wpresource = get_posts($args);
 			}
 		} else {
-			$image = $media;
+			$wpresource = $media;
 		}
-		return $image;
+
+		//return $media[0]->ID;
+		return $wpresource;
 	}
 
 	function bit_assign_resource_to_wp( $resource, $extension = '.jpg' ) {
@@ -376,39 +421,41 @@ function bit_get_audio( $resource ) {
 			$file = $upload_dir['basedir'] . '/' . $filename;
 		}
 
-		file_put_contents($file, $image_data);
+		if($image_data != false) {
+			file_put_contents($file, $image_data);
 
-		$wp_filetype = wp_check_filetype( $filename, null );
+			$wp_filetype = wp_check_filetype( $filename, null );
 
-		$attachment = array(
-			'post_mime_type' => $wp_filetype['type'],
-			'post_title'	 => sanitize_file_name( $filename ),
-			'post_content'   => '',
-			'post_status'	 => 'inherit',
-			'meta_input'	 => array(
-				'_bit_mediaid'		=> $resource->mediaid,
-				'_bit_categoria'	=> $resource->categoria,
-				'_bit_id'			=> $resource->id,
-				'_bit_tipomaterial' => $resource->tipo_material,
-				'_bit_fechatext'	=> $resource->fecha_text,
-				'_bit_descripcion_sintetica'	=> $resource->descripcion_sintetica,
-				'_bit_descripcion_detallada'	=> $resource->descripcion_detallada,
-				'_bit_ingreso'		=> $resource->ingreso,
-				'_bit_procesamiento'=> $resource->procesamiento,
-				'_bit_fuente'		=> $resource->fuente,
-				'_bit_play_asoc'	=> $resource->play_asoc
-			)
-		);
+			$attachment = array(
+				'post_mime_type' => $wp_filetype['type'],
+				'post_title'	 => sanitize_file_name( $filename ),
+				'post_content'   => '',
+				'post_status'	 => 'inherit',
+				'meta_input'	 => array(
+					'_bit_mediaid'		=> $resource->mediaid,
+					'_bit_categoria'	=> $resource->categoria,
+					'_bit_id'			=> $resource->id,
+					'_bit_tipomaterial' => $resource->tipo_material,
+					'_bit_fechatext'	=> $resource->fecha_text,
+					'_bit_descripcion_sintetica'	=> $resource->descripcion_sintetica,
+					'_bit_descripcion_detallada'	=> $resource->descripcion_detallada,
+					'_bit_ingreso'		=> $resource->ingreso,
+					'_bit_procesamiento'=> $resource->procesamiento,
+					'_bit_fuente'		=> $resource->fuente,
+					'_bit_play_asoc'	=> $resource->play_asoc
+				)
+			);
 
-		$attach_id = wp_insert_attachment( $attachment, $file );
-		
-		require_once( ABSPATH . 'wp-admin/includes/image.php');
-		require_once( ABSPATH . 'wp-admin/includes/media.php');
-		
-		$attach_data = wp_generate_attachment_metadata( $attach_id, $file );
-		wp_update_attachment_metadata( $attach_id, $attach_data );
+			$attach_id = wp_insert_attachment( $attachment, $file );
+			
+			require_once( ABSPATH . 'wp-admin/includes/image.php');
+			require_once( ABSPATH . 'wp-admin/includes/media.php');
+			
+			$attach_data = wp_generate_attachment_metadata( $attach_id, $file );
+			wp_update_attachment_metadata( $attach_id, $attach_data );
 
-		return $attach_id;
+			return $attach_id;
+		}
 	}
 
 // Funciones para revisar todos los materiales por tipo
