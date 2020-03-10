@@ -157,9 +157,9 @@ function bit_render_mediazone( ) {
 }
 
 
-function bit_get_gallery( $playid ) {
+function bit_get_gallery( $playid, $type ) {
 	$output = '';
-	$fotos = bit_get_mediatype($playid, 'fotografia');
+	$fotos = bit_get_mediatype($playid, $type );
 
 	if($fotos):
 		$output .= '<div class="bit-gallery">';
@@ -186,7 +186,13 @@ function bit_get_media( ) {
 
 	switch($type) {
 		case('gallery'):
-			$output .= bit_get_gallery( $playid );
+			$output .= bit_get_gallery( $playid, 'fotografia' );
+		break;
+		case('bocetos'):
+			$output .= bit_get_gallery( $playid, 'bocetos' );
+		break;
+		case('papeleria'):
+			$output .= bit_get_gallery( $playid, 'papeleria' );
 		break;
 		default:
 			$output .= $type . ': Content not ready yet';
@@ -244,7 +250,7 @@ function bit_convert_typename( $type ) {
 		case('papeleria'):
 		return 'Papelería';
 		break;
-		case('boceto-3d'):
+		case('bocetos'):
 		return 'Boceto 3D';
 		break;
 	}
