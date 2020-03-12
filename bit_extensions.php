@@ -20,7 +20,7 @@ define( 'BIT_DB_VERSION', '0.0.16' );
 define( 'BIT_TABLENAME', 'texto_dramatico');
 define( 'BIT_MEDIATABLENAME', 'archivo_medios');
 
-include_once( plugin_dir_path( __FILE__ ) . 'bit_admin.php');
+include_once( plugin_dir_path( __FILE__ ) . 'admin-interface.php');
 include_once( plugin_dir_path( __FILE__ ) . 'bit_db_functions.php');
 include_once( plugin_dir_path( __FILE__ ) . 'bit_wp_functions.php');
 
