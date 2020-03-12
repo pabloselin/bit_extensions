@@ -20,140 +20,69 @@ define( 'BIT_DB_VERSION', '0.0.16' );
 define( 'BIT_TABLENAME', 'texto_dramatico');
 define( 'BIT_MEDIATABLENAME', 'archivo_medios');
 
-include_once( plugin_dir_path( __FILE__ ) . 'admin-interface.php');
+include_once( plugin_dir_path( __FILE__ ) . 'bit_admin.php');
+include_once( plugin_dir_path( __FILE__ ) . 'bit_db_functions.php');
+include_once( plugin_dir_path( __FILE__ ) . 'bit_wp_functions.php');
 
 
-function bit_create_tables() {
-	global $wpdb;
-	$dbver = BIT_DB_VERSION;
-	$actver = get_option('bit_dbver');
+add_action( 'wp_ajax_nopriv_bit_get_mediazone', 'bit_get_mediazone');
+add_action( 'wp_ajax_bit_get_mediazone', 'bit_get_mediazone');
 
-	if(!get_site_option('bit_dbver') || $dbver != get_site_option('bit_dbver')) {
-		$table_name = $wpdb->prefix . BIT_TABLENAME;
-		$mediatable_name = $wpdb->prefix . BIT_MEDIATABLENAME;
-		$charset_collate = $wpdb->get_charset_collate();
-
-		$sql = "CREATE TABLE $table_name(
-		id mediumint(9) NOT NULL AUTO_INCREMENT,
-		unidad mediumint(9) NOT NULL,
-		ids_asoc tinytext NOT NULL,
-		play_asoc int NOT NULL,
-		texto text NOT NULL,
-		tipo tinytext NOT NULL,
-		personajes text NOT NULL,
-		UNIQUE KEY id (id)
-		) $charset_collate;
-		CREATE TABLE $mediatable_name(
-		id mediumint(9) NOT NULL AUTO_INCREMENT,
-		mediaid tinytext NOT NULL,
-		categoria text NOT NULL,
-		tipo_material text NOT NULL,
-		fecha_text tinytext NOT NULL,
-		descripcion_sintetica text NOT NULL,
-		descripcion_detallada text NOT NULL,
-		ingreso text NOT NULL,
-		procesamiento text NOT NULL,
-		fuente text NOT NULL,
-		play_asoc int NOT NULL,
-		UNIQUE KEY id (id)
-	) $charset_collate;";
-
-	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-	dbDelta($sql);
-	update_option('bit_dbver', $dbver);
-}
-}
-
-function bit_create_mediatables() {
-	global $wpdb;
-	$dbver = BIT_DB_VERSION;
-	$actver = get_option('bit_dbver');
-
-	if(!get_site_option('bit_dbver') || $dbver != get_site_option('bit_dbver')) {
-		$table_name = $wpdb->prefix . BIT_MEDIATABLENAME;
-		$charset_collate = $wpdb->get_charset_collate();
-
-		$sql = "CREATE TABLE $table_name(
-		id mediumint(9) NOT NULL AUTO_INCREMENT,
-		mediaid mediumint(9) NOT NULL,
-		categoria text NOT NULL,
-		tipo_material text NOT NULL,
-		fecha_text tinytext NOT NULL,
-		descripcion_sintetica text NOT NULL,
-		descripcion_detallada text NOT NULL,
-		ingreso text NOT NULL,
-		procesamiento text NOT NULL,
-		fuente text NOT NULL,
-		UNIQUE KEY id (id)
-	) $charset_collate;";
-
-	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-	dbDelta($sql);
-	update_option('bit_dbver', $dbver);
-}
-}
-
-function bit_update_db_check() {
-	if ( get_site_option( 'bit_dbver' ) != BIT_DB_VERSION ) {
-		bit_create_tables();
-        //bit_create_mediatables();
-	}
-}
-
-add_action( 'plugins_loaded', 'bit_update_db_check' );
-
-register_activation_hook( __FILE__, 'bit_update_db_check' );
-
-function bit_populate_text_tables( $data ) {
-	//upload data to text tables
-}
-
-function bit_populate_media_tables( $data ) {
-	//upload data to media tables
-}
-
-function bit_correlate_media( $mediaid ) {
-	//correlate media with actual resource
-}
-
-function bit_get_line( $lineid ) {
-	//get text line and metadata
-}
-
-add_action( 'wp_ajax_nopriv_bit_render_mediazone', 'bit_render_mediazone');
-add_action( 'wp_ajax_bit_render_mediazone', 'bit_render_mediazone');
-
-function bit_render_mediazone( ) {
+function bit_get_mediazone( ) {
 	$media = $_POST['params'];
 	$id = $_POST['id'];
 	$medias = explode(',', $media);
 	$output = '';
-	if(count($medias) > 1):
-		$carouselID = 'mediacarousel-' . $id;
+	
+	$carouselID = 'mediaitems-' . $id;
 
-		$output .= '<div class="carousel" id="' . $carouselID . '">';
+	$output .= '<div class="col-md-12">';
+	$output .= '<h3 class="mediazone-title">Materiales asociados</h3>';
 
-		foreach($medias as $media):
-			$media = str_replace(' ', '', $media);
-			$resource = bit_get_single_media_item($media);
+	$output .= '<div class="mediaitems-gallery" id="' . $carouselID . '">';
 
-			$output .= '<div class="carousel-item">' . $resource . '</div>';
+	foreach($medias as $media):
+		$media = str_replace(' ', '', $media);
+		$resource = bit_get_resource($media);
+		$tipomaterial = sanitize_title( $resource->tipo_material );
 
-		endforeach;
-		
+		$output .= '<div class="media-item type-' . $tipomaterial . '" data-toggle="modal" data-target="#modal-media-text" data-type="' . $tipomaterial . '" data-mediaid="'. $resource->mediaid .'">';
+		$output .= '<span class="mediaicon">' . bit_return_mediaicon( $tipomaterial ) . '</span>';
+		$output .= '<div class="media-item-text">';
+		$output .= $resource->mediaid;
 		$output .= '</div>';
-	else:
-		foreach($medias as $media) {
-			$media = str_replace(' ', '', $media);
-			$resource = bit_get_single_media_item($media);
+		$output .= '</div>';
 
-			$output .= $resource;
+	endforeach;
 
-		}
-	endif;
+	$output .= '</div></div>';
 
 	echo $output;
 	die();
+}
+
+function bit_return_mediaicon( $type ) {
+
+	switch($type) {
+		case('fotografia'):
+		$icon = '<i class="fas fa-image"></i>';
+		break;
+		case('video'):
+		$icon = '<i class="fas fa-film"></i>';
+		break;
+		case('audio'):
+		$icon = '<i class="fas fa-music"></i>';
+		break;
+		case('papeleria'):
+		case('documentos'):
+		$icon = '<i class="fas fa-file-invoice"></i>';
+		break;
+		case('boceto-3d'):
+		$icon = '<i class="fas fa-cube"></i>';
+		break; 
+	}
+
+	return $icon;
 }
 
 
@@ -186,75 +115,23 @@ function bit_get_media( ) {
 
 	switch($type) {
 		case('gallery'):
-			$output .= bit_get_gallery( $playid, 'fotografia' );
+		$output .= bit_get_gallery( $playid, 'fotografia' );
 		break;
 		case('bocetos'):
-			$output .= bit_get_gallery( $playid, 'bocetos' );
+		$output .= bit_get_gallery( $playid, 'bocetos' );
 		break;
 		case('papeleria'):
-			$output .= bit_get_gallery( $playid, 'papeleria' );
+		$output .= bit_get_gallery( $playid, 'papeleria' );
 		break;
 		default:
-			$output .= $type . ': Content not ready yet';
+		$output .= $type . ': Content not ready yet';
 	}
 
 	echo $output;
 	die();
 }
 
-function bit_get_play( $playid ) {
-	//get intro for play
-	global $wpdb;
-	$tablename = BIT_TABLENAME;
 
-	$results = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}{$tablename} WHERE play_asoc = {$playid}", OBJECT);
-
-	return $results;
-}
-
-function bit_get_all_media_from_db( $playid ) {
-	//get all media from playid
-	global $wpdb;
-	$media_tablename = BIT_MEDIATABLENAME;
-
-	$results = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}{$media_tablename} WHERE play_asoc = {$playid}", OBJECT);
-
-	return $results;
-}
-
-function bit_get_mediatype( $playid, $type ) {
-	//get all media for a type associated to play
-	global $wpdb;
-	$media_tablename = BIT_MEDIATABLENAME;
-
-	$materialtype = bit_convert_typename($type);
-
-	$results = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}{$media_tablename} WHERE tipo_material = '{$materialtype}'");
-
-	return $results;
-}
-
-function bit_convert_typename( $type ) {
-	switch($type) {
-		case('fotografia'):
-		return 'Fotografía';
-		break;
-		case('video'):
-		return 'Video';
-		case('documentos'):
-		return 'Documentos';
-		break;
-		case('audio'):
-		return 'Audio';
-		break;
-		case('papeleria'):
-		return 'Papelería';
-		break;
-		case('bocetos'):
-		return 'Boceto 3D';
-		break;
-	}
-}
 
 function bit_get_mediafolder( $playid ) {
 	$uploads_folder = wp_get_upload_dir();
@@ -265,16 +142,20 @@ function bit_get_mediafolder( $playid ) {
 
 function bit_get_single_media_item( $mediaid ) {
 	$item = bit_get_resource( $mediaid );
-	$mediaitem = '<div class="media-item-wrapper">';
-	$mediaitem .= bit_separate_resource( $item );
-	$mediaitem .= '<div class="media-caption">
-	<p class="item-descsint">' . $item->descripcion_sintetica . '</p>
-	<p class="item-descext">' . $item->descripcion_detallada . '</p>
-	<p class="item-cat">' . $item->categoria . '</p>
-	<p class="item-fecha">' . $item->fecha_text . '</p>
-	<p class="item-fuente"><span class="label">Fuente: </span>' . $item->fuente . '</p>
-	</div>';
-	$mediaitem .= '</div>';
+	if($item):
+		$mediaitem = '<div class="media-item-wrapper">';
+		$mediaitem .= bit_separate_resource( $item );
+		$mediaitem .= '<div class="media-caption">
+		<p class="item-descsint">' . $item->descripcion_sintetica . '</p>
+		<p class="item-descext">' . $item->descripcion_detallada . '</p>
+		<p class="item-cat">' . $item->categoria . '</p>
+		<p class="item-fecha">' . $item->fecha_text . '</p>
+		<p class="item-fuente"><span class="label">Fuente: </span>' . $item->fuente . '</p>
+		</div>';
+		$mediaitem .= '</div>';
+	else:
+		$mediaitem = 'error';
+	endif;
 	return $mediaitem;
 }
 
@@ -288,12 +169,62 @@ function bit_get_image( $resource ) {
 	
 }
 
+
+add_action( 'wp_ajax_nopriv_bit_ajax_get_media', 'bit_ajax_get_media');
+add_action( 'wp_ajax_bit_ajax_get_media', 'bit_ajax_get_media');
+
+function bit_ajax_get_media() {
+
+	$resourceid = $_POST['mediaid'];
+	$type = $_POST['type'];
+
+	$args = array(
+		'post_type' => 'attachment',
+		'numberposts' => 1,
+		'meta_key'  => '_bit_mediaid',
+		'meta_value' => $resourceid
+	);
+	$mediaitem = get_posts($args);
+	if($mediaitem) {
+		$mediaurl = wp_get_attachment_url( $mediaitem[0]->ID );
+		switch($type) {
+			case('fotografia'):
+			$output = '<img src="' . $mediaurl . '" alt="">';
+			break;
+			case('video'):
+			$output = do_shortcode('[video src="' . $mediaurl . '"]');
+			break;
+			case('audio'):
+			$output = do_shortcode('[audio src="' . $mediaurl . '"]');
+			break;
+			case('documentos'):
+			$output = '<a href="' . $mediaurl . '"><i class="fas fa-download"></i> Descargar documento</a>';
+			break;
+			case('boceto-3d'):
+			$output = '<img src="' . $mediaurl . '" alt="">';
+			break;
+			default:
+			$output = '<a href="' . $mediaurl . '"><i class="fas fa-download"></i> Descargar documento</a>';
+			break;
+
+		}
+		$jsonmediaitem = json_encode($mediaitem[0]);
+		$output .= "<script> var mediaitem='{$jsonmediaitem}'; </script>";
+	}
+
+	echo $output;
+	die();
+}
+
 function bit_get_video( $resource ) {
 	// Returns post object from a video, in case is in the database but not in wordpress posts it creates a new post with the stuff.
 
 	$video = bit_get_media_from_wp( $resource, '.m4v' );
-	$vidurl = wp_get_attachment_url( $video[0]->ID );
-	return $video[0];
+	if(isset($video[0]->ID)):
+		$vidurl = wp_get_attachment_url( $video[0]->ID );
+		$vidplayer = do_shortcode('[video src="'.$vidurl.'"]');
+		return $vidplayer;
+	endif;
 }
 
 function bit_get_video_player( $videoid ) {
@@ -347,15 +278,6 @@ function bit_get_audio( $resource ) {
 		return $imgelement; 
 	}
 
-	function bit_get_resource( $mediaid ) {
-	//gets a media info by mediaid
-		global $wpdb;
-		$media_tablename = BIT_MEDIATABLENAME;
-
-		$results = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}{$media_tablename} WHERE mediaid LIKE '{$mediaid}'", OBJECT);
-
-		return $results;
-	}
 
 	function bit_separate_resource( $resource ) {
 		$type = sanitize_title( $resource->tipo_material );
@@ -379,90 +301,16 @@ function bit_get_audio( $resource ) {
 			$composed_resource = bit_get_boceto3d($resource);
 			break;
 			default:
-			$composed_resource = bit_get_image($resource);
+			$composed_resource = '';
 		}
 
 		return $composed_resource;
 	}
 
-	function bit_get_media_from_wp( $resource, $extension = '.jpg' ) {
-		
-		$args = array(
-			'post_type' => 'attachment',
-			'numberposts' => 1,
-			'meta_key'  => '_bit_mediaid',
-			'meta_value' => $resource->mediaid
-		);
-
-
-		$media = get_posts($args);
-		
-		if(empty($media)) {
-			$id = bit_assign_resource_to_wp( $resource, $extension );
-			if($id) {
-				$args = array(
-					'posts__in' => $id
-				);
-				$wpresource = get_posts($args);
-			}
-		} else {
-			$wpresource = $media;
-		}
-
-		//return $media[0]->ID;
-		return $wpresource;
+	function bit_mediaitemsgallery() {
+	//Devuelve un lote de cuadraditos con interfaces apropiadas para cada cuadradito (foto, audio, video, etc)
 	}
 
-	function bit_assign_resource_to_wp( $resource, $extension = '.jpg' ) {
-		$image_url = bit_get_mediafolder($resource->play_asoc) . $resource->mediaid . $extension;
-		$upload_dir = wp_upload_dir();
-
-		$image_data = file_get_contents( $image_url );
-		$filename = basename( $image_url );
-
-		if ( wp_mkdir_p( $upload_dir['path'] ) ) {
-			$file = $upload_dir['path'] . '/' . $filename;
-		}
-		else {
-			$file = $upload_dir['basedir'] . '/' . $filename;
-		}
-
-		if($image_data != false) {
-			file_put_contents($file, $image_data);
-
-			$wp_filetype = wp_check_filetype( $filename, null );
-
-			$attachment = array(
-				'post_mime_type' => $wp_filetype['type'],
-				'post_title'	 => sanitize_file_name( $filename ),
-				'post_content'   => '',
-				'post_status'	 => 'inherit',
-				'meta_input'	 => array(
-					'_bit_mediaid'		=> $resource->mediaid,
-					'_bit_categoria'	=> $resource->categoria,
-					'_bit_id'			=> $resource->id,
-					'_bit_tipomaterial' => $resource->tipo_material,
-					'_bit_fechatext'	=> $resource->fecha_text,
-					'_bit_descripcion_sintetica'	=> $resource->descripcion_sintetica,
-					'_bit_descripcion_detallada'	=> $resource->descripcion_detallada,
-					'_bit_ingreso'		=> $resource->ingreso,
-					'_bit_procesamiento'=> $resource->procesamiento,
-					'_bit_fuente'		=> $resource->fuente,
-					'_bit_play_asoc'	=> $resource->play_asoc
-				)
-			);
-
-			$attach_id = wp_insert_attachment( $attachment, $file );
-			
-			require_once( ABSPATH . 'wp-admin/includes/image.php');
-			require_once( ABSPATH . 'wp-admin/includes/media.php');
-			
-			$attach_data = wp_generate_attachment_metadata( $attach_id, $file );
-			wp_update_attachment_metadata( $attach_id, $attach_data );
-
-			return $attach_id;
-		}
-	}
 
 // Funciones para revisar todos los materiales por tipo
 
