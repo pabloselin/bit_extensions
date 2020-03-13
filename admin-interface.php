@@ -105,6 +105,7 @@ class ImportarContenidosMultimedia {
 			echo '<h2>' . $obra->name . '</h2>';
 			$contenidos = bit_get_all_media_from_db($obra->term_id);
 
+			echo 'allow_url_fopen = ', ini_get('allow_url_fopen');
 			echo '<p>' . count($contenidos) .' materiales asociados a la obra</p>';
 
 			if($contenidos):
