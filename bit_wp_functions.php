@@ -160,7 +160,7 @@ function bit_ajax_assign_resource_to_wp( ) {
 			echo 'Contenido asignado al medio:' . $attach_id;
 			die();
 		} else {
-			echo 'No se encontró el archivo asociado con el mediaid: ' . $mediaid . ' Tipo: ' . $santype;
+			echo 'No se encontró el archivo asociado con el mediaid: ' . $mediaid . ' Tipo: ' . $santype . ' RUTA: ' . $media_path;
 			die();
 		}
 		
