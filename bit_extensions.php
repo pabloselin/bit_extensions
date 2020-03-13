@@ -25,8 +25,22 @@ include_once( plugin_dir_path( __FILE__ ) . 'bit_db_functions.php');
 include_once( plugin_dir_path( __FILE__ ) . 'bit_wp_functions.php');
 
 
+
+
+function bit_scripts() {
+	wp_enqueue_script('bit_admin', plugin_dir_url( __FILE__) . '/bit_admin.js', array('jquery'), PLUGIN_VERSION, false);
+	wp_localize_script( 'bit_admin', 'bit', array(
+												'ajaxurl' => admin_url('admin-ajax.php')
+												)
+	);	
+}
+
+add_action('admin_enqueue_scripts', 'bit_scripts', 0, 0);
+
 add_action( 'wp_ajax_nopriv_bit_get_mediazone', 'bit_get_mediazone');
 add_action( 'wp_ajax_bit_get_mediazone', 'bit_get_mediazone');
+
+
 
 function bit_get_mediazone( ) {
 	$media = $_POST['params'];
@@ -61,6 +75,46 @@ function bit_get_mediazone( ) {
 	die();
 }
 
+add_action( 'wp_ajax_nopriv_bit_get_all_mediazone', 'bit_get_all_mediazone');
+add_action( 'wp_ajax_bit_get_all_mediazone', 'bit_get_all_mediazone');
+
+function bit_get_all_mediazone() {
+	$playid = $_POST['playid'];
+	$all = $_POST['all'];
+	$type = $_POST['type'];
+	$tax = $_POST['tax'];
+	$output = '';
+
+	$output .= '<div class="mediaitems-gallery">';
+	if($all == true) {
+		$args = array(
+			'post_type' 	=> 'attachment',
+			'meta_key'		=> '_bit_play_asoc',
+			'meta_value' 	=> $playid,
+			'numberposts'	=> -1
+		);
+		$medias = get_posts($args);
+
+		foreach($medias as $media) {
+			$mediaid = get_post_meta($media->ID, '_bit_mediaid', true);
+			$tipomaterial = sanitize_title(get_post_meta($media->ID, '_bit_tipomaterial', true));
+
+			$output .= '<div class="media-item type-' . $tipomaterial . '" data-toggle="modal" data-target="#modal-media-text-materiales" data-type="' . $tipomaterial . '" data-mediaid="'. $mediaid .'">';
+			$output .= '<span class="mediaicon">' . bit_return_mediaicon( $tipomaterial ) . '</span>';
+			$output .= '<div class="media-item-text">';
+			$output .= $mediaid;
+			$output .= '</div>';
+			$output .= '</div>';
+		}
+	}
+
+	$output .= '</div>';
+
+	echo $output;
+	die();
+
+}
+
 function bit_return_mediaicon( $type ) {
 
 	switch($type) {
@@ -79,7 +133,10 @@ function bit_return_mediaicon( $type ) {
 		break;
 		case('boceto-3d'):
 		$icon = '<i class="fas fa-cube"></i>';
-		break; 
+		break;
+		default:
+		$icon = '<i class="fas fa-file"></i>';
+		break;
 	}
 
 	return $icon;
@@ -305,6 +362,30 @@ function bit_get_audio( $resource ) {
 		}
 
 		return $composed_resource;
+	}
+
+	function bit_separate_extension( $type ) {
+		switch($type) {
+			case('fotografia'):
+			$extension = '.jpg';
+			break;
+			case('video'):
+			$extension = '.m4v';
+			break;
+			case('documentos'):
+			$extension = '.pdf';
+			break;
+			case('audio'):
+			$extension = '.mp3';
+			break;
+			case('papeleria'):
+			$extension = '.pdf';
+			break;
+			case('boceto-3d'):
+			$extension = '.jpg';
+			break;	
+		}
+		return $extension;
 	}
 
 	function bit_mediaitemsgallery() {
