@@ -121,7 +121,7 @@ function bit_ajax_assign_resource_to_wp( ) {
 			$file = $upload_dir['path'] . '/' . $filename;
 		}
 		else {
-			$file = $upload_dir['path'] . '/' . $filename;
+			$file = $upload_dir['basedir'] . '/' . $filename;
 		}
 
 		if($image_data != false) {
