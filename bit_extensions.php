@@ -194,7 +194,7 @@ function bit_get_mediafolder( $playid ) {
 	$uploads_folder = wp_get_upload_dir();
 	$playslug = get_term_by( 'id', $playid, 'obra' );
 
-	return $uploads_folder['baseurl'] . '/media_obras/' . $playslug->slug . '/';
+	return $uploads_folder['path'] . '/media_obras/' . $playslug->slug . '/';
 }
 
 function bit_get_single_media_item( $mediaid ) {
