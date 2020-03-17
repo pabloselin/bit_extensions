@@ -403,7 +403,7 @@ function bit_taxonomy_filter_ui($taxonomies) {
 	}
 
 	$output .= '</div>';
-	$output .= '<div class="terms-filter-zone">llll</div>';
+	$output .= '<div class="terms-filter-zone"><!--ajax generated filter--></div>';
 
 	return $output;
 }
