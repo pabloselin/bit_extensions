@@ -309,7 +309,8 @@ function bit_ajax_get_media() {
 
 		}
 			$jsoninfo = array(
-				'post_title' => $mediaitem[0]->post_title
+				'post_title' => $mediaitem[0]->post_title,
+				'post_excerpt' => $mediaitem[0]->post_content,
 			);
 			$jsonmediaitem = json_encode($jsoninfo, JSON_FORCE_OBJECT);
 			$output .= "<script>
