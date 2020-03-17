@@ -114,7 +114,7 @@ function bit_ajax_assign_resource_to_wp( ) {
 			)
 		);
 
-		$image_data = file_get_contents( $media_path, false, $ctx );
+		$image_data = file_get_contents( $media_path, true, $ctx );
 		$filename = basename( $media_path );
 
 		if ( wp_mkdir_p( $upload_dir['path'] ) ) {

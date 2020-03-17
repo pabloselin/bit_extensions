@@ -115,20 +115,59 @@ function bit_get_all_mediazone() {
 
 }
 
+
+add_action( 'wp_ajax_nopriv_bit_get_mediapage', 'bit_get_mediapage');
+add_action( 'wp_ajax_bit_get_mediapage', 'bit_get_mediapage');
+
+function bit_get_mediapage() {
+	$pageid = $_POST['pageid'];
+	$output = '';
+
+	$output .= '<div class="mediaitems-gallery">';
+		$args = array(
+			'post_type' 	=> 'attachment',
+			'post_parent'	=> $pageid,
+			'numberposts'	=> -1
+		);
+		$medias = get_posts($args);
+
+		foreach($medias as $media) {
+			$mediaid = $media->ID;
+			$tipomaterial = get_post_mime_type( $media->ID );
+
+			$output .= '<div class="media-item type-' . $tipomaterial . '" data-toggle="modal" data-target="#modal-media-text-materiales" data-type="' . $tipomaterial . '" data-mediaid="'. $mediaid .'">';
+			$output .= '<span class="mediaicon">' . bit_return_mediaicon( $tipomaterial ) . '</span>';
+			$output .= '<div class="media-item-text">';
+			$output .= $mediaid;
+			$output .= '</div>';
+			$output .= '</div>';
+		}
+
+	$output .= '</div>';
+
+	echo $output;
+	die();
+
+}
+
 function bit_return_mediaicon( $type ) {
 
 	switch($type) {
 		case('fotografia'):
+		case('image/jpeg'):
 		$icon = '<i class="fas fa-image"></i>';
 		break;
 		case('video'):
+		case('video/m4v'):
 		$icon = '<i class="fas fa-film"></i>';
 		break;
 		case('audio'):
+		case('audio/mp3'):
 		$icon = '<i class="fas fa-music"></i>';
 		break;
 		case('papeleria'):
 		case('documentos'):
+		case('application/pdf'):
 		$icon = '<i class="fas fa-file-invoice"></i>';
 		break;
 		case('boceto-3d'):
@@ -140,6 +179,10 @@ function bit_return_mediaicon( $type ) {
 	}
 
 	return $icon;
+}
+
+function bit_mime_equivs( $type ) {
+
 }
 
 
@@ -234,27 +277,41 @@ function bit_ajax_get_media() {
 
 	$resourceid = $_POST['mediaid'];
 	$type = $_POST['type'];
+	$ispage = $_POST['ispage'];
+	
+	if($ispage == true):
+		$args = array(
+			'p' => $resourceid,
+			'post_type' => 'attachment'
+		);
+	else:
+		$args = array(
+			'post_type' => 'attachment',
+			'numberposts' => 1,
+			'meta_key'  => '_bit_mediaid',
+			'meta_value' => $resourceid
+		);
+	endif;
 
-	$args = array(
-		'post_type' => 'attachment',
-		'numberposts' => 1,
-		'meta_key'  => '_bit_mediaid',
-		'meta_value' => $resourceid
-	);
 	$mediaitem = get_posts($args);
 	if($mediaitem) {
 		$mediaurl = wp_get_attachment_url( $mediaitem[0]->ID );
 		switch($type) {
 			case('fotografia'):
+			case('image/jpeg'):
+			case('image/png'):
 			$output = '<img src="' . $mediaurl . '" alt="">';
 			break;
 			case('video'):
+			case('video/m4v'):
 			$output = do_shortcode('[video src="' . $mediaurl . '"]');
 			break;
 			case('audio'):
+			case('audio/mp3'):
 			$output = do_shortcode('[audio src="' . $mediaurl . '"]');
 			break;
 			case('documentos'):
+			case('application/pdf'):
 			$output = '<a href="' . $mediaurl . '"><i class="fas fa-download"></i> Descargar documento</a>';
 			break;
 			case('boceto-3d'):
@@ -265,8 +322,16 @@ function bit_ajax_get_media() {
 			break;
 
 		}
-		$jsonmediaitem = json_encode($mediaitem[0]);
-		$output .= "<script> var mediaitem='{$jsonmediaitem}'; </script>";
+			$jsoninfo = array(
+				'post_title' => $mediaitem[0]->post_title
+			);
+			$jsonmediaitem = json_encode($jsoninfo, JSON_FORCE_OBJECT);
+			$output .= "<script>
+		 	 			//<![CDATA[
+						var ispage = '{$ispage}';
+						var mediaitem='{$jsonmediaitem}';
+						//]]>
+					</script>";
 	}
 
 	echo $output;
