@@ -15,7 +15,7 @@
  */
 
 
-define( 'PLUGIN_VERSION', '0.0.8' );
+define( 'PLUGIN_VERSION', '0.0.9' );
 define( 'BIT_DB_VERSION', '0.0.16' );
 define( 'BIT_TABLENAME', 'texto_dramatico');
 define( 'BIT_MEDIATABLENAME', 'archivo_medios');
@@ -23,6 +23,7 @@ define( 'BIT_MEDIATABLENAME', 'archivo_medios');
 include_once( plugin_dir_path( __FILE__ ) . 'admin-interface.php');
 include_once( plugin_dir_path( __FILE__ ) . 'bit_db_functions.php');
 include_once( plugin_dir_path( __FILE__ ) . 'bit_wp_functions.php');
+include_once( plugin_dir_path( __FILE__ ) . 'bit_utils.php');
 
 
 
@@ -32,7 +33,7 @@ function bit_scripts() {
 	wp_localize_script( 'bit_admin', 'bit', array(
 												'ajaxurl' => admin_url('admin-ajax.php')
 												)
-	);	
+	);
 }
 
 add_action('admin_enqueue_scripts', 'bit_scripts', 0, 0);
@@ -85,6 +86,16 @@ function bit_get_all_mediazone() {
 	$tax = $_POST['tax'];
 	$output = '';
 
+	$relevant_taxonomies = array(
+		'area',
+		'rol',
+		'espacial_obras',
+		'identidad_educacion',
+		'obra'
+	);
+
+	$output .= bit_taxonomy_filter_ui($relevant_taxonomies);
+
 	$output .= '<div class="mediaitems-gallery">';
 	if($all == true) {
 		$args = array(
@@ -99,7 +110,7 @@ function bit_get_all_mediazone() {
 			$mediaid = get_post_meta($media->ID, '_bit_mediaid', true);
 			$tipomaterial = sanitize_title(get_post_meta($media->ID, '_bit_tipomaterial', true));
 
-			$output .= '<div class="media-item type-' . $tipomaterial . '" data-toggle="modal" data-target="#modal-media-text-materiales" data-type="' . $tipomaterial . '" data-mediaid="'. $mediaid .'">';
+			$output .= '<div class="media-item type-' . $tipomaterial . '" data-toggle="modal" data-target="#modal-media-text-materiales" data-type="' . $tipomaterial . '" data-mediaid="'. $mediaid .'" ' . bit_item_data_terms($media->ID) . '>';
 			$output .= '<span class="mediaicon">' . bit_return_mediaicon( $tipomaterial ) . '</span>';
 			$output .= '<div class="media-item-text">';
 			$output .= $mediaid;
@@ -120,8 +131,20 @@ add_action( 'wp_ajax_nopriv_bit_get_mediapage', 'bit_get_mediapage');
 add_action( 'wp_ajax_bit_get_mediapage', 'bit_get_mediapage');
 
 function bit_get_mediapage() {
+	/** Devuelve los attachments de una pagina en cuadritos con links para que se abran en una ventana modal, para páginas **/
+
 	$pageid = $_POST['pageid'];
 	$output = '';
+
+	$relevant_taxonomies = array(
+		'area',
+		'rol',
+		'espacial_obras',
+		'identidad_educacion'
+	);
+
+	$output .= bit_taxonomy_filter_ui($relevant_taxonomies);
+
 
 	$output .= '<div class="mediaitems-gallery">';
 		$args = array(
@@ -133,9 +156,9 @@ function bit_get_mediapage() {
 
 		foreach($medias as $media) {
 			$mediaid = $media->ID;
-			$tipomaterial = get_post_mime_type( $media->ID );
+			$tipomaterial = get_post_mime_type(  $mediaid );
 
-			$output .= '<div class="media-item type-' . $tipomaterial . '" data-toggle="modal" data-target="#modal-media-text-materiales" data-type="' . $tipomaterial . '" data-mediaid="'. $mediaid .'">';
+			$output .= '<div class="media-item type-' . $tipomaterial . '" data-toggle="modal" data-target="#modal-media-text-materiales" data-type="' . $tipomaterial . '" data-mediaid="'. $mediaid .'" ' . bit_item_data_terms( $mediaid ) . '>';
 			$output .= '<span class="mediaicon">' . bit_return_mediaicon( $tipomaterial ) . '</span>';
 			$output .= '<div class="media-item-text">';
 			$output .= $mediaid;
@@ -150,40 +173,8 @@ function bit_get_mediapage() {
 
 }
 
-function bit_return_mediaicon( $type ) {
 
-	switch($type) {
-		case('fotografia'):
-		case('image/jpeg'):
-		$icon = '<i class="fas fa-image"></i>';
-		break;
-		case('video'):
-		case('video/m4v'):
-		$icon = '<i class="fas fa-film"></i>';
-		break;
-		case('audio'):
-		case('audio/mp3'):
-		$icon = '<i class="fas fa-music"></i>';
-		break;
-		case('papeleria'):
-		case('documentos'):
-		case('application/pdf'):
-		$icon = '<i class="fas fa-file-invoice"></i>';
-		break;
-		case('boceto-3d'):
-		$icon = '<i class="fas fa-cube"></i>';
-		break;
-		default:
-		$icon = '<i class="fas fa-file"></i>';
-		break;
-	}
 
-	return $icon;
-}
-
-function bit_mime_equivs( $type ) {
-
-}
 
 
 function bit_get_gallery( $playid, $type ) {
@@ -233,12 +224,7 @@ function bit_get_media( ) {
 
 
 
-function bit_get_mediafolder( $playid ) {
-	$uploads_folder = wp_get_upload_dir();
-	$playslug = get_term_by( 'id', $playid, 'obra' );
 
-	return $uploads_folder['baseurl'] . '/media_obras/' . $playslug->slug . '/';
-}
 
 function bit_get_single_media_item( $mediaid ) {
 	$item = bit_get_resource( $mediaid );
@@ -401,62 +387,26 @@ function bit_get_audio( $resource ) {
 	}
 
 
-	function bit_separate_resource( $resource ) {
-		$type = sanitize_title( $resource->tipo_material );
-		switch($type) {
-			case('fotografia'):
-			$composed_resource = bit_get_image($resource);
-			break;
-			case('video'):
-			$composed_resource = bit_get_video($resource);
-			break;
-			case('documentos'):
-			$composed_resource = bit_get_documento($resource);
-			break;
-			case('audio'):
-			$composed_resource = bit_get_audio($resource);
-			break;
-			case('papeleria'):
-			$composed_resource = bit_get_papeleria($resource);
-			break;
-			case('boceto-3d'):
-			$composed_resource = bit_get_boceto3d($resource);
-			break;
-			default:
-			$composed_resource = '';
-		}
 
-		return $composed_resource;
+
+
+function bit_taxonomy_filter_ui($taxonomies) {
+	// Devuelve los botones para filtrar de una lista de taxonomias en un array
+	$output = '<div class="filtertax">';
+
+	foreach($taxonomies as $taxonomy) {
+
+		$labels = get_taxonomy_labels( get_taxonomy($taxonomy) );
+
+		$output .= '<button class="btn btn-taxfilter" data-tax="' . $taxonomy . '">' . $labels->name . '</button>';
+
 	}
 
-	function bit_separate_extension( $type ) {
-		switch($type) {
-			case('fotografia'):
-			$extension = '.jpg';
-			break;
-			case('video'):
-			$extension = '.m4v';
-			break;
-			case('documentos'):
-			$extension = '.pdf';
-			break;
-			case('audio'):
-			$extension = '.mp3';
-			break;
-			case('papeleria'):
-			$extension = '.pdf';
-			break;
-			case('boceto-3d'):
-			$extension = '.jpg';
-			break;	
-		}
-		return $extension;
-	}
+	$output .= '</div>';
+	$output .= '<div class="terms-filter-zone">llll</div>';
 
-	function bit_mediaitemsgallery() {
-	//Devuelve un lote de cuadraditos con interfaces apropiadas para cada cuadradito (foto, audio, video, etc)
-	}
-
+	return $output;
+}
 
 // Funciones para revisar todos los materiales por tipo
 
