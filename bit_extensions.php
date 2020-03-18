@@ -161,7 +161,7 @@ function bit_get_mediapage() {
 			$output .= '<div class="media-item type-' . $tipomaterial . '" data-toggle="modal" data-target="#modal-media-text-materiales" data-type="' . $tipomaterial . '" data-mediaid="'. $mediaid .'" ' . bit_item_data_terms( $mediaid ) . '>';
 			$output .= '<span class="mediaicon">' . bit_return_mediaicon( $tipomaterial ) . '</span>';
 			$output .= '<div class="media-item-text">';
-			$output .= $mediaid;
+			$output .= $media->post_title;
 			$output .= '</div>';
 			$output .= '</div>';
 		}
