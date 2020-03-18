@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Extensiones Bitacora Teatro UC
- * Plugin URI:        https://example.com/plugins/the-basics/
+ * Plugin URI:        https://apie.cl
  * Description:       Sistemas para textos y otras funcionalidades
  * Version:           0.0.7
  * Requires at least: 5.2
@@ -64,7 +64,7 @@ function bit_get_mediazone( ) {
 		$output .= '<div class="media-item type-' . $tipomaterial . '" data-toggle="modal" data-target="#modal-media-text" data-type="' . $tipomaterial . '" data-mediaid="'. $resource->mediaid .'">';
 		$output .= '<span class="mediaicon">' . bit_return_mediaicon( $tipomaterial ) . '</span>';
 		$output .= '<div class="media-item-text">';
-		$output .= $resource->mediaid;
+		$output .= get_the_title($id);
 		$output .= '</div>';
 		$output .= '</div>';
 
@@ -308,9 +308,33 @@ function bit_ajax_get_media() {
 			break;
 
 		}
+
+			$output .= '<div class="mediainfotable">';
+			
+				if(get_post_meta($mediaitem[0]->ID, '_bit_descripcion_detallada', true)):
+					$output .= '<div class="mediainforow"><span class="label">Descripción detallada: </span>' . get_post_meta($mediaitem[0]->ID, '_bit_descripcion_detallada', true) . '</div>';
+				endif;
+				if(get_post_meta($mediaitem[0]->ID, '_bit_fechatext', true)):
+					$output .= '<div class="mediainforow"><span class="label">Fecha: </span>' . get_post_meta($mediaitem[0]->ID, '_bit_fechatext', true) . '</div>';
+				endif;
+				if(get_post_meta($mediaitem[0]->ID, '_bit_ingreso', true)):
+					$output .= '<div class="mediainforow"><span class="label">Ingreso: </span>' . get_post_meta($mediaitem[0]->ID, '_bit_ingreso', true) . '</div>';
+				endif;
+				if(get_post_meta($mediaitem[0]->ID, '_bit_procesamiento', true)):
+					$output .= '<div class="mediainforow"><span class="label">Procesamiento: </span>' . get_post_meta($mediaitem[0]->ID, '_bit_procesamiento', true) . '</div>';
+				endif;
+				if(get_post_meta($mediaitem[0]->ID, '_bit_fuente')):
+					$output .= '<div class="mediainforow"><span class="label">Fuente: </span>' . get_post_meta($mediaitem[0]->ID, '_bit_fuente', true) . '</div>';
+				endif;
+
+			$output .= '</div>';
+
+			$title = (get_post_meta($mediaitem[0]->ID, '_bit_descripcion_sintetica', true) ? get_post_meta($mediaitem[0]->ID, '_bit_descripcion_sintetica', true) : $mediaitem[0]->post_title);
+			$content = (get_post_meta($mediaitem[0]->ID, '_bit_descripcion_detallada', true) ? get_post_meta($mediaitem[0]->ID, '_bit_descripcion_detallada', true) : $mediaitem[0]->post_content);
+
 			$jsoninfo = array(
-				'post_title' => $mediaitem[0]->post_title,
-				'post_excerpt' => $mediaitem[0]->post_content,
+				'post_title' => $title,
+				'post_excerpt' => $content,
 			);
 			$jsonmediaitem = json_encode($jsoninfo, JSON_FORCE_OBJECT);
 			$output .= "<script>

@@ -80,6 +80,46 @@ function bit_assign_resource_to_wp( $resource, $extension = '.jpg' ) {
 	}
 }
 
+add_action( 'wp_ajax_nopriv_bit_ajax_update_info_from_table', 'bit_ajax_update_info_from_table');
+add_action( 'wp_ajax_bit_ajax_update_info_from_table', 'bit_ajax_update_info_from_table');
+
+function bit_ajax_update_info_from_table( ) {
+
+	$mediaid = $_POST['mediaid'];
+
+	$args = array(
+		'post_type' 	=> 'attachment',
+		'numberposts' 	=> 1,
+		'meta_key' 		=> '_bit_mediaid',
+		'meta_value' 	=> $mediaid
+	);
+
+	$updateresource = get_posts($args);
+
+	$resource = bit_get_resource( $mediaid );  
+
+	if($updateresource && $resource) {
+		update_post_meta( $updateresource[0]->ID, '_bit_categoria', $resource->categoria );
+		update_post_meta( $updateresource[0]->ID, '_bit_tipomaterial', $resource->tipo_material );
+		update_post_meta( $updateresource[0]->ID, '_bit_fechatext', $resource->fecha_text );
+		update_post_meta( $updateresource[0]->ID, '_bit_descripcion_sintetica', $resource->descripcion_sintetica );
+		update_post_meta( $updateresource[0]->ID, '_bit_descripcion_detallada', $resource->descripcion_detallada );
+		update_post_meta( $updateresource[0]->ID, '_bit_ingreso', $resource->ingreso );
+		update_post_meta( $updateresource[0]->ID, '_bit_procesamiento', $resource->procesamiento );
+		update_post_meta( $updateresource[0]->ID, '_bit_fuente', $resource->fuente );
+
+		$updated = true;
+	}
+
+	if($updated == true) {
+		echo $mediaid . ': Contenidos de la tabla actualizados';
+	} else {
+		echo $mediaid . ': Error actualizando contenido';
+	}
+	
+	die();
+}
+
 
 
 add_action( 'wp_ajax_nopriv_bit_ajax_assign_resource_to_wp', 'bit_ajax_assign_resource_to_wp');

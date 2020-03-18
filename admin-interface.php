@@ -118,7 +118,8 @@ class ImportarContenidosMultimedia {
 
 			echo '<div class="play-messages" data-play-id="' . $obra->term_id . '"></div>';
 
-			echo '<button data-play-id="' . $obra->term_id . '" class="importar_contenidos">Importar contenidos desde carpeta</button>';
+			echo '<p><button data-play-id="' . $obra->term_id . '" class="importar_contenidos">Importar contenidos desde carpeta</button></p>';
+			echo '<p><button data-play-id="' . $obra->term_id . '" class="actualizar_contenidos">Actualizar contenidos desde tabla</button></p>';
 			echo '<hr>';
 			echo '</div>';
 		}
