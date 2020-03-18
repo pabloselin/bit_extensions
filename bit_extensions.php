@@ -95,6 +95,7 @@ function bit_get_all_mediazone() {
 	);
 
 	$output .= bit_taxonomy_filter_ui($relevant_taxonomies);
+	$output .= bit_materialtype_filter_ui();
 
 	$output .= '<div class="mediaitems-gallery">';
 	if($all == true) {
@@ -108,7 +109,7 @@ function bit_get_all_mediazone() {
 
 		foreach($medias as $media) {
 			$mediaid = get_post_meta($media->ID, '_bit_mediaid', true);
-			$tipomaterial = sanitize_title(get_post_meta($media->ID, '_bit_tipomaterial', true));
+			$tipomaterial = (get_post_meta($media->ID, '_bit_tipomaterial', true) ? sanitize_title(get_post_meta($media->ID, '_bit_tipomaterial', true)) : 'documento');
 
 			$output .= '<div class="media-item type-' . $tipomaterial . '" data-toggle="modal" data-target="#modal-media-text-materiales" data-type="' . $tipomaterial . '" data-mediaid="'. $mediaid .'" ' . bit_item_data_terms($media->ID) . '>';
 			$output .= '<span class="mediaicon">' . bit_return_mediaicon( $tipomaterial ) . '</span>';
@@ -298,13 +299,13 @@ function bit_ajax_get_media() {
 			break;
 			case('documentos'):
 			case('application/pdf'):
-			$output = '<a href="' . $mediaurl . '"><i class="fas fa-download"></i> Descargar documento</a>';
+			$output = '<a class="documento-download" href="' . $mediaurl . '"><i class="fas fa-download"></i> Descargar documento</a>';
 			break;
 			case('boceto-3d'):
 			$output = '<img src="' . $mediaurl . '" alt="">';
 			break;
 			default:
-			$output = '<a href="' . $mediaurl . '"><i class="fas fa-download"></i> Descargar documento</a>';
+			$output = '<a class="documento-download" href="' . $mediaurl . '"><i class="fas fa-download"></i> Descargar documento</a>';
 			break;
 
 		}
@@ -417,7 +418,17 @@ function bit_get_audio( $resource ) {
 
 function bit_taxonomy_filter_ui($taxonomies) {
 	// Devuelve los botones para filtrar de una lista de taxonomias en un array
-	$output = '<div class="filtertax">';
+		
+	$output = 	'<div class="row showfilter">
+					<div class="col-md-12">
+						<div class="custom-control custom-switch">
+							<input type="checkbox" class="custom-control-input" id="enableTaxFilter" data-target="filtertax">
+							<label class="custom-control-label" for="enableTaxFilter">Filtrar por clasificacion de material</label>
+						</div>
+					</div>
+				</div>';
+
+	$output .= '<div class="filtertax hidden">';
 
 	foreach($taxonomies as $taxonomy) {
 
@@ -429,6 +440,38 @@ function bit_taxonomy_filter_ui($taxonomies) {
 
 	$output .= '</div>';
 	$output .= '<div class="terms-filter-zone"><!--ajax generated filter--></div>';
+
+	return $output;
+}
+
+function bit_materialtype_filter_ui() {
+	//Devuelve los botones para filtrar de una lista de tipos de materiales
+	$types = array(
+				'fotografia' => 'Fotografia',
+				'audio'		 => 'Audio',
+				'documento'  => 'Documento',
+				'video'		 => 'Video',
+				'boceto-3d'  => 'Boceto 3D',
+				'papeleria'  => 'Papelería'
+			);
+
+	$output = 	'<div class="row showfilter">
+					<div class="col-md-12">
+						<div class="custom-control custom-switch">
+							<input type="checkbox" class="custom-control-input" id="enableTypeFilter" data-target="filtertype">
+							<label class="custom-control-label" for="enableTypeFilter">Filtrar por tipo de material</label>
+						</div>
+					</div>
+				</div>';
+
+	$output .= '<div class="filtertype hidden">';
+
+	foreach($types as $key=>$type) {
+
+		$output .= '<button class="btn btn-materialtype" data-type="' . $key . '">' . $type . '</button>';
+	}
+
+	$output .= '</div>';
 
 	return $output;
 }
