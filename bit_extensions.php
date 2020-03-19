@@ -171,7 +171,7 @@ function bit_get_mediapage() {
 
 		foreach($medias as $media) {
 			$mediaid = $media->ID;
-			$tipomaterial = get_post_mime_type(  $mediaid );
+			$tipomaterial = bit_mime_to_type(get_post_mime_type(  $mediaid ));
 			$wpthumbnail = wp_get_attachment_image_src( $mediaid, 'thumbnail', false );
 
 			$output .= '<div style="background-image:url(' . $wpthumbnail[0] . ');" class="media-item type-' . $tipomaterial . '" data-toggle="modal" data-target="#modal-media-text-materiales" data-type="' . $tipomaterial . '" data-mediaid="'. $mediaid .'" ' . bit_item_data_terms( $mediaid ) . '>';

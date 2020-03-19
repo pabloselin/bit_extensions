@@ -117,3 +117,26 @@ function bit_get_mediafolder( $playid ) {
 		}
 		return $extension;
 	}
+
+	function bit_mime_to_type( $mime ) {
+		switch($mime) {
+		case('image/jpeg'):
+		case('image/png'):
+				$type = 'fotografia';
+		break;
+		case('video/m4v'):
+			$type = 'video';
+		break;
+		case('audio/mp3'):
+			$type = 'audio';
+		break;
+		case('application/pdf'):
+			$type = 'documento';
+		break;
+		default:
+			$type = 'documento';
+		break;
+		}
+
+		return $type;
+	}
