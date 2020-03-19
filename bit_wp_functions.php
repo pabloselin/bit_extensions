@@ -211,3 +211,22 @@ function bit_ajax_assign_resource_to_wp( ) {
 		die();
 	}
 }
+
+function bit_mediaid_to_wpid( $mediaid ){
+	// Returns a post item related to the mediaid
+	$args = array(
+		'post_type' => 'attachment',
+		'numberposts' => 1,
+		'meta_key'  => '_bit_mediaid',
+		'meta_value' => $mediaid
+	);
+
+	$item = get_posts($args);
+
+	if($item) {
+		return $item[0];
+	} else {
+		return false;
+	}
+
+}
