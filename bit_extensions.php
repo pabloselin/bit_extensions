@@ -343,6 +343,8 @@ function bit_ajax_get_media() {
 					$output .= '<div class="mediainforow"><span class="label">Fuente: </span>' . get_post_meta($mediaitem[0]->ID, '_bit_fuente', true) . '</div>';
 				endif;
 
+			$output .= '<div class="item-taxinfo">' . bit_taxinfo( $mediaitem[0]->ID ) . '</div>';
+
 			$output .= '</div>';
 
 			$title = (get_post_meta($mediaitem[0]->ID, '_bit_descripcion_sintetica', true) ? get_post_meta($mediaitem[0]->ID, '_bit_descripcion_sintetica', true) : $mediaitem[0]->post_title);
@@ -489,6 +491,44 @@ function bit_materialtype_filter_ui() {
 	$output .= '</div>';
 
 	return $output;
+}
+
+function bit_taxinfo( $postid ) {
+	
+	$relevant_taxonomies = array(
+		'area',
+		'rol',
+		'espacial_obras',
+		'identidad_educacion',
+		'obra'
+	);
+
+	$output = '';
+
+	foreach( $relevant_taxonomies as $taxonomy ) {
+
+		$terms = get_the_terms( $postid, $taxonomy );
+		$taxonomyLabels = get_taxonomy_labels( get_taxonomy($taxonomy) );
+
+		if( $terms ) {
+
+			$output .= '<div class="terminfo ' . $taxonomy . '">'; 
+
+			$output .= '<span class="taxlabel"><strong>' . $taxonomyLabels->name . ': </strong></span>';	
+				foreach($terms as $term) {
+
+					$output .= '<span class="termlabel termlabel-' . $term->slug . '">' . $term->name . '</span>';
+
+				}
+
+			$output .= '</div>';
+
+		}
+
+	}
+
+	return $output;
+
 }
 
 // Funciones para revisar todos los materiales por tipo
