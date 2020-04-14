@@ -29,26 +29,26 @@ function bit_return_mediaicon( $type ) {
 	switch($type) {
 		case('fotografia'):
 		case('image/jpeg'):
-		$icon = '<i class="fas fa-image"></i>';
+		$icon = '<img src="' . plugin_dir_url( __FILE__ ) . '/icons/eye.svg' . '">';
 		break;
 		case('video'):
 		case('video/m4v'):
-		$icon = '<i class="fas fa-film"></i>';
+		$icon = '<img src="' . plugin_dir_url( __FILE__ ) . '/icons/play.svg' . '">';
 		break;
 		case('audio'):
 		case('audio/mp3'):
-		$icon = '<i class="fas fa-music"></i>';
+		$icon = '<img src="' . plugin_dir_url( __FILE__ ) . '/icons/ear.svg' . '">';
 		break;
 		case('papeleria'):
 		case('documentos'):
 		case('application/pdf'):
-		$icon = '<i class="fas fa-file-invoice"></i>';
+		$icon = '<img src="' . plugin_dir_url( __FILE__ ) . '/icons/eye.svg' . '">';
 		break;
 		case('boceto-3d'):
-		$icon = '<i class="fas fa-cube"></i>';
+		$icon = '<img src="' . plugin_dir_url( __FILE__ ) . '/icons/eye.svg' . '">';
 		break;
 		default:
-		$icon = '<i class="fas fa-file"></i>';
+		$icon = '<img src="' . plugin_dir_url( __FILE__ ) . '/icons/eye.svg' . '">';
 		break;
 	}
 

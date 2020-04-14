@@ -63,7 +63,7 @@ function bit_get_mediazone( ) {
 		$tipomaterial = sanitize_title( $resource->tipo_material );
 		$wpitem = bit_mediaid_to_wpid( $media );
 		$wpthumbnail = wp_get_attachment_image_src( $wpitem->ID, 'thumbnail', false );
-		$sintdesc = get_post_meta($wpitem->ID, '_bit_descripcion_sintetica', true);
+		$sintdesc = substr(get_post_meta($wpitem->ID, '_bit_descripcion_sintetica', true), 0, 15);
 
 		$output .= '<div style="background-image:url(' . $wpthumbnail[0] . ');" class="media-item type-' . $tipomaterial . '" data-toggle="modal" data-target="#modal-media-text" data-type="' . $tipomaterial . '" data-mediaid="'. $resource->mediaid .'">';
 		$output .= '<span class="mediaicon">' . bit_return_mediaicon( $tipomaterial ) . '</span>';
@@ -116,21 +116,7 @@ function bit_get_all_mediazone() {
 		$medias = get_posts($args);
 
 		foreach($medias as $media) {
-			$mediaid = get_post_meta($media->ID, '_bit_mediaid', true);
-			$tipomaterial = (get_post_meta($media->ID, '_bit_tipomaterial', true) ? sanitize_title(get_post_meta($media->ID, '_bit_tipomaterial', true)) : 'documento');
-			$wpthumbnail = wp_get_attachment_image_src( $media->ID, 'thumbnail', false );
-			$sintdesc = get_post_meta($media->ID, '_bit_descripcion_sintetica', true);
-
-			$output .= '<div style="background-image:url(' . $wpthumbnail[0] . ');" class="media-item type-' . $tipomaterial . '" data-toggle="modal" data-target="#modal-media-text-materiales" data-type="' . $tipomaterial . '" data-mediaid="'. $mediaid .'" ' . bit_item_data_terms($media->ID) . '>';
-			$output .= '<span class="mediaicon">' . bit_return_mediaicon( $tipomaterial ) . '</span>';
-			
-			if($sintdesc) {
-				$output .= '<div class="media-item-text">';
-				$output .= $sintdesc;
-				$output .= '</div>';	
-			}
-			
-			$output .= '</div>';
+			$output .= bit_mediaitem_template($media->ID);
 		}
 	}
 
@@ -170,16 +156,7 @@ function bit_get_mediapage() {
 		$medias = get_posts($args);
 
 		foreach($medias as $media) {
-			$mediaid = $media->ID;
-			$tipomaterial = bit_mime_to_type(get_post_mime_type(  $mediaid ));
-			$wpthumbnail = wp_get_attachment_image_src( $mediaid, 'thumbnail', false );
-
-			$output .= '<div style="background-image:url(' . $wpthumbnail[0] . ');" class="media-item type-' . $tipomaterial . '" data-toggle="modal" data-target="#modal-media-text-materiales" data-type="' . $tipomaterial . '" data-mediaid="'. $mediaid .'" ' . bit_item_data_terms( $mediaid ) . '>';
-			$output .= '<span class="mediaicon">' . bit_return_mediaicon( $tipomaterial ) . '</span>';
-			$output .= '<div class="media-item-text">';
-			$output .= $media->post_title;
-			$output .= '</div>';
-			$output .= '</div>';
+			$output .= bit_mediaitem_template( $media->ID, true);
 		}
 
 	$output .= '</div>';
@@ -189,7 +166,43 @@ function bit_get_mediapage() {
 
 }
 
+function bit_mediaitem_template($formerID, $is_in_page = false) {
 
+			$output = '';		
+			
+			if($is_in_page) {
+				$mediaid = $formerID;
+				$tipomaterial = bit_mime_to_type(get_post_mime_type(  $mediaid ));
+				$sintmeta = $media->post_title;
+			} else {
+				$mediaid = get_post_meta($formerID, '_bit_mediaid', true);
+				$tipomaterial = (get_post_meta($formerID, '_bit_tipomaterial', true) ? sanitize_title(get_post_meta($formerID, '_bit_tipomaterial', true)) : 'documento');
+				$sintmeta = get_post_meta($formerID, '_bit_descripcion_sintetica', true);
+			}
+
+			$sintdesc = (strlen($sintmeta) > 25 ? substr($sintmeta, 0, 25) . '...' : $sintmeta);
+			$wpthumbnail = wp_get_attachment_image_src( $formerID, 'thumbnail', false );
+			
+			
+
+			$output .= '<div class="media-item-wrapper type-' . $tipomaterial . '" data-type="' . $tipomaterial . '" data-mediaid="'. $mediaid .'" ' . bit_item_data_terms($formerID) . ' data-toggle="modal" data-target="#modal-media-text-materiales">';
+			
+			$output .= '<div class="media-content">';
+			$output .= '<div style="background-image:url(' . $wpthumbnail[0] . ');" class="media-item type-' . $tipomaterial . '">';
+			$output .= '<span class="mediaicon">' . bit_return_mediaicon( $tipomaterial ) . '</span>';
+			
+			
+			$output .= '<div class="media-item-text">';
+			$output .= ($sintdesc ? $sintdesc . '<span>' . $tipomaterial . '</span>' : '<span>' . $tipomaterial . '</span>');
+			$output .= '</div>';	
+			
+			
+			$output .= '</div>';
+			$output .= '</div>';
+			$output .= '</div>';
+
+			return $output;
+}
 
 
 
@@ -295,36 +308,44 @@ function bit_ajax_get_media() {
 		);
 	endif;
 
+	$output = '<div class="row"> <div class="col-md-8">';
+
 	$mediaitem = get_posts($args);
 	if($mediaitem) {
 		$mediaurl = wp_get_attachment_url( $mediaitem[0]->ID );
+		$title = (get_post_meta($mediaitem[0]->ID, '_bit_descripcion_sintetica', true) ? get_post_meta($mediaitem[0]->ID, '_bit_descripcion_sintetica', true) : $mediaitem[0]->post_title);
+
 		switch($type) {
 			case('fotografia'):
 			case('image/jpeg'):
 			case('image/png'):
-			$output = '<img src="' . $mediaurl . '" alt="">';
+			$output .= '<img src="' . $mediaurl . '" alt="">';
 			break;
 			case('video'):
 			case('video/m4v'):
-			$output = do_shortcode('[video src="' . $mediaurl . '"]');
+			$output .= do_shortcode('[video src="' . $mediaurl . '"]');
 			break;
 			case('audio'):
 			case('audio/mp3'):
-			$output = do_shortcode('[audio src="' . $mediaurl . '"]');
+			$output .= do_shortcode('[audio src="' . $mediaurl . '"]');
 			break;
 			case('documentos'):
 			case('application/pdf'):
-			$output = '<a class="documento-download" href="' . $mediaurl . '"><i class="fas fa-download"></i> Descargar documento</a>';
+			$output .= '<a class="documento-download" href="' . $mediaurl . '"><i class="fas fa-download"></i> Descargar documento</a>';
 			break;
 			case('boceto-3d'):
-			$output = '<img src="' . $mediaurl . '" alt="">';
+			$output .= '<img src="' . $mediaurl . '" alt="">';
 			break;
 			default:
-			$output = '<a class="documento-download" href="' . $mediaurl . '"><i class="fas fa-download"></i> Descargar documento</a>';
+			$output .= '<a class="documento-download" href="' . $mediaurl . '"><i class="fas fa-download"></i> Descargar documento</a>';
 			break;
 
 		}
 
+			$output .= '</div> <div class="col-md-4">';
+			$output .= '<span class="mediatype-header">' . $type . '</span>';
+			$output .= '<h1 class="modal-title">' . $title .'</h1>';
+			
 			$output .= '<div class="mediainfotable">';
 			
 				if(get_post_meta($mediaitem[0]->ID, '_bit_descripcion_detallada', true)):
@@ -345,9 +366,11 @@ function bit_ajax_get_media() {
 
 			$output .= '<div class="item-taxinfo">' . bit_taxinfo( $mediaitem[0]->ID ) . '</div>';
 
-			$output .= '</div>';
-
-			$title = (get_post_meta($mediaitem[0]->ID, '_bit_descripcion_sintetica', true) ? get_post_meta($mediaitem[0]->ID, '_bit_descripcion_sintetica', true) : $mediaitem[0]->post_title);
+			$output .= '</div> <!-- mediainfotable -->';
+			$output .= '</div> <!-- col-md-4-->';
+			$output .= '</div> <!-- row -->';
+			
+			
 			$content = (get_post_meta($mediaitem[0]->ID, '_bit_descripcion_detallada', true) ? get_post_meta($mediaitem[0]->ID, '_bit_descripcion_detallada', true) : $mediaitem[0]->post_content);
 
 			$jsoninfo = array(
