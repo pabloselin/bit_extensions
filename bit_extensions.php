@@ -172,19 +172,31 @@ function bit_mediaitem_template($formerID, $is_in_page = false) {
 				$sintmeta = $media->post_title;
 			} else {
 				$mediaid = get_post_meta($formerID, '_bit_mediaid', true);
-				$tipomaterial = (get_post_meta($formerID, '_bit_tipomaterial', true) ? sanitize_title(get_post_meta($formerID, '_bit_tipomaterial', true)) : 'documento');
+				$tipomaterial = (get_post_meta($formerID, '_bit_tipomaterial', true) ? sanitize_title(get_post_meta($formerID, '_bit_tipomaterial', true)) : 'imagen');
 				$sintmeta = get_post_meta($formerID, '_bit_descripcion_sintetica', true);
 			}
 
 			$sintdesc = (strlen($sintmeta) > 25 ? substr($sintmeta, 0, 25) . '...' : $sintmeta);
-			$wpthumbnail = wp_get_attachment_image_src( $formerID, 'medium', false );
+
+			if($tipomaterial == 'video'):
+				//Requiere plugin Video Embed Thumbnail Generator
+				$videothumbid = get_post_meta($formerID, '_kgflashmediaplayer-poster-id', true);
+				$wpthumbnail = wp_get_attachment_image_src( $videothumbid, 'medium', false );
+			else:
+				$wpthumbnail = wp_get_attachment_image_src( $formerID, 'medium', false );
+			endif;
 			
 			
 
 			$output .= '<div class="media-item-wrapper type-' . $tipomaterial . '" data-type="' . $tipomaterial . '" data-mediaid="'. $mediaid .'" ' . bit_item_data_terms($formerID) . ' data-toggle="modal" data-target="#modal-media-text-materiales">';
 			
 			$output .= '<div class="media-content">';
-			$output .= '<div style="background-image:url(' . $wpthumbnail[0] . ');" class="media-item type-' . $tipomaterial . '">';
+
+			if($wpthumbnail):
+				$output .= '<div style="background-image:url(' . $wpthumbnail[0] . ');" class="media-item type-' . $tipomaterial . '">';
+			else:
+				$output .= '<div class="media-item type-' . $tipomaterial . '">';
+			endif;
 			$output .= '<span class="mediaicon">' . bit_return_mediaicon( $tipomaterial ) . '</span>';
 			
 			
@@ -339,7 +351,7 @@ function bit_ajax_get_media() {
 		}
 
 			$output .= '</div> <div class="col-md-4">';
-			$output .= '<span class="mediatype-header">' . $type . '</span>';
+			//$output .= '<span class="mediatype-header">' . $type . '</span>';
 			$output .= '<h1 class="modal-title">' . $title .'</h1>';
 			
 			$output .= '<div class="mediainfotable">';
@@ -350,12 +362,12 @@ function bit_ajax_get_media() {
 				if(get_post_meta($mediaitem[0]->ID, '_bit_fechatext', true)):
 					$output .= '<div class="mediainforow"><span class="label">Fecha: </span>' . get_post_meta($mediaitem[0]->ID, '_bit_fechatext', true) . '</div>';
 				endif;
-				if(get_post_meta($mediaitem[0]->ID, '_bit_ingreso', true)):
-					$output .= '<div class="mediainforow"><span class="label">Ingreso: </span>' . get_post_meta($mediaitem[0]->ID, '_bit_ingreso', true) . '</div>';
-				endif;
-				if(get_post_meta($mediaitem[0]->ID, '_bit_procesamiento', true)):
-					$output .= '<div class="mediainforow"><span class="label">Procesamiento: </span>' . get_post_meta($mediaitem[0]->ID, '_bit_procesamiento', true) . '</div>';
-				endif;
+				// if(get_post_meta($mediaitem[0]->ID, '_bit_ingreso', true)):
+				// 	$output .= '<div class="mediainforow"><span class="label">Ingreso: </span>' . get_post_meta($mediaitem[0]->ID, '_bit_ingreso', true) . '</div>';
+				// endif;
+				// if(get_post_meta($mediaitem[0]->ID, '_bit_procesamiento', true)):
+				// 	$output .= '<div class="mediainforow"><span class="label">Procesamiento: </span>' . get_post_meta($mediaitem[0]->ID, '_bit_procesamiento', true) . '</div>';
+				// endif;
 				if(get_post_meta($mediaitem[0]->ID, '_bit_fuente')):
 					$output .= '<div class="mediainforow"><span class="label">Fuente: </span>' . get_post_meta($mediaitem[0]->ID, '_bit_fuente', true) . '</div>';
 				endif;

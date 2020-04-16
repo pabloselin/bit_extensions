@@ -113,7 +113,7 @@ function bit_get_mediafolder( $playid ) {
 			break;
 			case('boceto-3d'):
 			$extension = '.jpg';
-			break;	
+			break;
 		}
 		return $extension;
 	}
