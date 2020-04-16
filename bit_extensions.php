@@ -59,22 +59,18 @@ function bit_get_mediazone( ) {
 
 	foreach($medias as $media):
 		$media = str_replace(' ', '', $media);
-		$resource = bit_get_resource($media);
-		$tipomaterial = sanitize_title( $resource->tipo_material );
-		$wpitem = bit_mediaid_to_wpid( $media );
-		$wpthumbnail = wp_get_attachment_image_src( $wpitem->ID, 'thumbnail', false );
-		$sintdesc = substr(get_post_meta($wpitem->ID, '_bit_descripcion_sintetica', true), 0, 15);
+		
+		$args = array(
+			'post_type' 	=> 'attachment',
+			'numberposts' 	=> 1,
+			'meta_key'		=> '_bit_mediaid',
+			'meta_value'	=> $media
+		);
 
-		$output .= '<div style="background-image:url(' . $wpthumbnail[0] . ');" class="media-item type-' . $tipomaterial . '" data-toggle="modal" data-target="#modal-media-text" data-type="' . $tipomaterial . '" data-mediaid="'. $resource->mediaid .'">';
-		$output .= '<span class="mediaicon">' . bit_return_mediaicon( $tipomaterial ) . '</span>';
-		$output .= '<div class="media-item-text">';
-		if($sintdesc) {
-				$output .= '<div class="media-item-text">';
-				$output .= $sintdesc;
-				$output .= '</div>';	
-			}
-		$output .= '</div>';
-		$output .= '</div>';
+		$item = get_posts($args);
+		if($item) {
+			$output .= bit_mediaitem_template($item[0]->ID);
+		}
 
 	endforeach;
 
@@ -181,7 +177,7 @@ function bit_mediaitem_template($formerID, $is_in_page = false) {
 			}
 
 			$sintdesc = (strlen($sintmeta) > 25 ? substr($sintmeta, 0, 25) . '...' : $sintmeta);
-			$wpthumbnail = wp_get_attachment_image_src( $formerID, 'thumbnail', false );
+			$wpthumbnail = wp_get_attachment_image_src( $formerID, 'medium', false );
 			
 			
 
@@ -193,7 +189,7 @@ function bit_mediaitem_template($formerID, $is_in_page = false) {
 			
 			
 			$output .= '<div class="media-item-text">';
-			$output .= ($sintdesc ? $sintdesc . '<span>' . $tipomaterial . '</span>' : '<span>' . $tipomaterial . '</span>');
+			$output .= ($sintdesc ? $sintdesc : '');
 			$output .= '</div>';	
 			
 			
