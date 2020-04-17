@@ -193,7 +193,8 @@ function bit_mediaitem_template($formerID, $is_in_page = false) {
 			$output .= '<div class="media-content">';
 
 			if($wpthumbnail):
-				$output .= '<div style="background-image:url(' . $wpthumbnail[0] . ');" class="media-item type-' . $tipomaterial . '">';
+				$output .= '<div class="media-item type-' . $tipomaterial . '">';
+				$output .= '<img class="media-item-image" data-src="' . $wpthumbnail[0] . '" alt="' . $sintdesc . '">';
 			else:
 				$output .= '<div class="media-item type-' . $tipomaterial . '">';
 			endif;
@@ -479,11 +480,10 @@ function bit_taxonomy_filter_ui($taxonomies) {
 	$output .= '<div class="filtertax hidden">';
 
 	foreach($taxonomies as $taxonomy) {
-
-		$labels = get_taxonomy_labels( get_taxonomy($taxonomy) );
-
-		$output .= '<button class="btn btn-taxfilter" data-tax="' . $taxonomy . '">' . $labels->name . '</button>';
-
+		if($taxonomy != 'obra') {
+			$labels = get_taxonomy_labels( get_taxonomy($taxonomy) );
+			$output .= '<button class="btn btn-taxfilter" data-tax="' . $taxonomy . '">' . $labels->name . '</button>';
+		}
 	}
 
 	$output .= '</div>';
