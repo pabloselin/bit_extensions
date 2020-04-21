@@ -198,11 +198,11 @@ function bit_mediaitem_template($formerID, $is_in_page = false) {
 			else:
 				$output .= '<div class="media-item type-' . $tipomaterial . '">';
 			endif;
-			$output .= '<span class="mediaicon">' . bit_return_mediaicon( $tipomaterial ) . '</span>';
+			//$output .= '<span class="mediaicon">' . bit_return_mediaicon( $tipomaterial ) . '</span>';
 			
 			
 			$output .= '<div class="media-item-text">';
-			$output .= ($sintdesc ? $sintdesc : '');
+			$output .= ($sintdesc ? '<span class="typelabel">' . $tipomaterial . '</span>' . $sintdesc : '<span class="typelabel">' . $tipomaterial . '</span>');
 			$output .= '</div>';	
 			
 			
@@ -468,26 +468,22 @@ function bit_get_audio( $resource ) {
 function bit_taxonomy_filter_ui($taxonomies) {
 	// Devuelve los botones para filtrar de una lista de taxonomias en un array
 		
-	$output = 	'<div class="row showfilter">
-					<div class="col-md-12">
-						<div class="custom-control custom-switch">
-							<input type="checkbox" class="custom-control-input" id="enableTaxFilter" data-target="filtertax">
-							<label class="custom-control-label" for="enableTaxFilter">Filtrar por clasificacion de material</label>
-						</div>
-					</div>
-				</div>';
+	
 
-	$output .= '<div class="filtertax hidden">';
+	$output .= '<div class="filtertax">';
 
 	foreach($taxonomies as $taxonomy) {
 		if($taxonomy != 'obra') {
 			$labels = get_taxonomy_labels( get_taxonomy($taxonomy) );
-			$output .= '<button class="btn btn-taxfilter" data-tax="' . $taxonomy . '">' . $labels->name . '</button>';
+			$output .= '<div class="dropdown-filters">';
+			$output .= '<button type="button" id="taxfilterbtn-' . $taxonomy . '" title="' . $labels->name . '" class="btn btn-taxfilter" data-tax="' . $taxonomy . '">' . $labels->name . '</button>';
+			$output .= '<div class="terms-filter-zone" data-for="' . $taxonomy . '"><!--ajax generated filter--></div>';
+			$output .= '</div>';
 		}
 	}
 
 	$output .= '</div>';
-	$output .= '<div class="terms-filter-zone"><!--ajax generated filter--></div>';
+	
 
 	return $output;
 }
@@ -503,20 +499,13 @@ function bit_materialtype_filter_ui() {
 				'papeleria'  => 'Papelería'
 			);
 
-	$output = 	'<div class="row showfilter">
-					<div class="col-md-12">
-						<div class="custom-control custom-switch">
-							<input type="checkbox" class="custom-control-input" id="enableTypeFilter" data-target="filtertype">
-							<label class="custom-control-label" for="enableTypeFilter">Filtrar por tipo de material</label>
-						</div>
-					</div>
-				</div>';
+	
 
-	$output .= '<div class="filtertype hidden">';
+	$output .= '<div class="materialtype-row">';
 
 	foreach($types as $key=>$type) {
 
-		$output .= '<button class="btn btn-materialtype" data-type="' . $key . '">' . $type . '</button>';
+		$output .= '<a href="#" title="' . $type .'" class="btn-materialtype btn-' . $key . '" data-type="' . $key . '">' . $type . '</a>';
 	}
 
 	$output .= '</div>';
@@ -561,18 +550,3 @@ function bit_taxinfo( $postid ) {
 	return $output;
 
 }
-
-// Funciones para revisar todos los materiales por tipo
-
-// Listado de fotografias
-
-// Listado de videos
-
-// Listado de audios
-
-// Listado de documentos
-
-// Listado de bocetos 3d
-
-// Funciones para revisar todos los materiales por categoría
-
