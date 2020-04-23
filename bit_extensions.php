@@ -100,6 +100,7 @@ function bit_get_all_mediazone() {
 
 	$output .= bit_taxonomy_filter_ui($relevant_taxonomies);
 	$output .= bit_materialtype_filter_ui();
+	$output .= bit_filterinfo_ui();
 
 	$output .= '<div class="mediaitems-gallery">';
 	if($all == true) {
@@ -141,6 +142,7 @@ function bit_get_mediapage() {
 	);
 
 	$output .= bit_taxonomy_filter_ui($relevant_taxonomies);
+	$output .= bit_filterinfo_ui();
 
 
 	$output .= '<div class="mediaitems-gallery">';
@@ -160,6 +162,12 @@ function bit_get_mediapage() {
 	echo $output;
 	die();
 
+}
+
+function bit_filterinfo_ui() {
+	$output = '<div class="currentfilterinfo"></div>';
+
+	return $output;
 }
 
 function bit_mediaitem_template($formerID, $is_in_page = false) {
