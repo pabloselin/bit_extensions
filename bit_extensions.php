@@ -169,7 +169,7 @@ function bit_mediaitem_template($formerID, $is_in_page = false) {
 			if($is_in_page) {
 				$mediaid = $formerID;
 				$tipomaterial = bit_mime_to_type(get_post_mime_type(  $mediaid ));
-				$sintmeta = $media->post_title;
+				$sintmeta = get_the_title($mediaid);
 			} else {
 				$mediaid = get_post_meta($formerID, '_bit_mediaid', true);
 				$tipomaterial = (get_post_meta($formerID, '_bit_tipomaterial', true) ? sanitize_title(get_post_meta($formerID, '_bit_tipomaterial', true)) : 'imagen');
@@ -188,7 +188,7 @@ function bit_mediaitem_template($formerID, $is_in_page = false) {
 			
 			
 
-			$output .= '<div class="media-item-wrapper type-' . $tipomaterial . '" data-type="' . $tipomaterial . '" data-mediaid="'. $mediaid .'" ' . bit_item_data_terms($formerID) . ' data-toggle="modal" data-target="#modal-media-text-materiales">';
+			$output .= '<div data-inpage="' . $is_in_page . '" class="media-item-wrapper type-' . $tipomaterial . '" data-type="' . $tipomaterial . '" data-mediaid="'. $mediaid .'" ' . bit_item_data_terms($formerID) . ' data-toggle="modal" data-target="#modal-media-text-materiales">';
 			
 			$output .= '<div class="media-content">';
 
