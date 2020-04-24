@@ -504,8 +504,8 @@ function bit_materialtype_filter_ui() {
 				'audio'		 => 'Audio',
 				'documento'  => 'Documento',
 				'video'		 => 'Video',
-				'boceto-3d'  => 'Boceto 3D',
-				'papeleria'  => 'Papelería'
+				//'boceto-3d'  => 'Boceto 3D',
+				//'papeleria'  => 'Papelería'
 			);
 
 	
