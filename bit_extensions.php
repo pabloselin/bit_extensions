@@ -95,7 +95,8 @@ function bit_get_all_mediazone() {
 		'rol',
 		'espacial_obras',
 		'identidad_educacion',
-		'obra'
+		'obra',
+		'desarrollo'
 	);
 
 	$output .= bit_taxonomy_filter_ui($relevant_taxonomies);
